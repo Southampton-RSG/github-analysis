@@ -1,10 +1,10 @@
-from pprint import pprint
 import typing
 
 from decouple import config
 import requests
 
 from github_analysis import db
+
 collection = db.collection('repos', indexes=['full_name'])
 
 
@@ -19,4 +19,4 @@ def fetch_repos(repos: typing.Iterable[str]):
         result = collection.replace_one({'full_name': repo},
                                         content,
                                         upsert=True)
-        pprint(result)
+        print(repo)
