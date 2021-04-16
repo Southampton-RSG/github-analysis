@@ -1,0 +1,7 @@
+# Config
+.env
+
+# Python
+.venv/
+venv/
+*.pyc
