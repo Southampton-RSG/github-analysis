@@ -5,3 +5,9 @@
 .venv/
 venv/
 *.pyc
+
+# Legacy
+/bin/
+
+# IDEs
+.vscode/

@@ -1,0 +1,135 @@
+HTTP/2 200 
+server: GitHub.com
+date: Wed, 14 Apr 2021 12:34:59 GMT
+content-type: application/json; charset=utf-8
+content-length: 5467
+cache-control: private, max-age=60, s-maxage=60
+vary: Accept, Authorization, Cookie, X-GitHub-OTP
+etag: "0f34b74c5b108273521e1c399b8ba1c4d9117cf429be1e4809b54d64044ad84a"
+last-modified: Fri, 05 Mar 2021 07:23:47 GMT
+x-oauth-scopes: 
+x-accepted-oauth-scopes: repo
+x-github-media-type: github.v3; format=json
+x-ratelimit-limit: 5000
+x-ratelimit-remaining: 4999
+x-ratelimit-reset: 1618407299
+x-ratelimit-used: 1
+access-control-expose-headers: ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, Deprecation, Sunset
+access-control-allow-origin: *
+strict-transport-security: max-age=31536000; includeSubdomains; preload
+x-frame-options: deny
+x-content-type-options: nosniff
+x-xss-protection: 0
+referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+content-security-policy: default-src 'none'
+vary: Accept-Encoding, Accept, X-Requested-With
+x-github-request-id: D3EA:0C6A:14C3A27:1519687:6076E173
+
+{
+  "id": 51828400,
+  "node_id": "MDEwOlJlcG9zaXRvcnk1MTgyODQwMA==",
+  "name": "pycgtool",
+  "full_name": "jag1g13/pycgtool",
+  "private": false,
+  "owner": {
+    "login": "jag1g13",
+    "id": 13136352,
+    "node_id": "MDQ6VXNlcjEzMTM2MzUy",
+    "avatar_url": "https://avatars.githubusercontent.com/u/13136352?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/jag1g13",
+    "html_url": "https://github.com/jag1g13",
+    "followers_url": "https://api.github.com/users/jag1g13/followers",
+    "following_url": "https://api.github.com/users/jag1g13/following{/other_user}",
+    "gists_url": "https://api.github.com/users/jag1g13/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/jag1g13/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/jag1g13/subscriptions",
+    "organizations_url": "https://api.github.com/users/jag1g13/orgs",
+    "repos_url": "https://api.github.com/users/jag1g13/repos",
+    "events_url": "https://api.github.com/users/jag1g13/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/jag1g13/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "html_url": "https://github.com/jag1g13/pycgtool",
+  "description": "Generate coarse-grained molecular dynamics models from atomistic trajectories.",
+  "fork": false,
+  "url": "https://api.github.com/repos/jag1g13/pycgtool",
+  "forks_url": "https://api.github.com/repos/jag1g13/pycgtool/forks",
+  "keys_url": "https://api.github.com/repos/jag1g13/pycgtool/keys{/key_id}",
+  "collaborators_url": "https://api.github.com/repos/jag1g13/pycgtool/collaborators{/collaborator}",
+  "teams_url": "https://api.github.com/repos/jag1g13/pycgtool/teams",
+  "hooks_url": "https://api.github.com/repos/jag1g13/pycgtool/hooks",
+  "issue_events_url": "https://api.github.com/repos/jag1g13/pycgtool/issues/events{/number}",
+  "events_url": "https://api.github.com/repos/jag1g13/pycgtool/events",
+  "assignees_url": "https://api.github.com/repos/jag1g13/pycgtool/assignees{/user}",
+  "branches_url": "https://api.github.com/repos/jag1g13/pycgtool/branches{/branch}",
+  "tags_url": "https://api.github.com/repos/jag1g13/pycgtool/tags",
+  "blobs_url": "https://api.github.com/repos/jag1g13/pycgtool/git/blobs{/sha}",
+  "git_tags_url": "https://api.github.com/repos/jag1g13/pycgtool/git/tags{/sha}",
+  "git_refs_url": "https://api.github.com/repos/jag1g13/pycgtool/git/refs{/sha}",
+  "trees_url": "https://api.github.com/repos/jag1g13/pycgtool/git/trees{/sha}",
+  "statuses_url": "https://api.github.com/repos/jag1g13/pycgtool/statuses/{sha}",
+  "languages_url": "https://api.github.com/repos/jag1g13/pycgtool/languages",
+  "stargazers_url": "https://api.github.com/repos/jag1g13/pycgtool/stargazers",
+  "contributors_url": "https://api.github.com/repos/jag1g13/pycgtool/contributors",
+  "subscribers_url": "https://api.github.com/repos/jag1g13/pycgtool/subscribers",
+  "subscription_url": "https://api.github.com/repos/jag1g13/pycgtool/subscription",
+  "commits_url": "https://api.github.com/repos/jag1g13/pycgtool/commits{/sha}",
+  "git_commits_url": "https://api.github.com/repos/jag1g13/pycgtool/git/commits{/sha}",
+  "comments_url": "https://api.github.com/repos/jag1g13/pycgtool/comments{/number}",
+  "issue_comment_url": "https://api.github.com/repos/jag1g13/pycgtool/issues/comments{/number}",
+  "contents_url": "https://api.github.com/repos/jag1g13/pycgtool/contents/{+path}",
+  "compare_url": "https://api.github.com/repos/jag1g13/pycgtool/compare/{base}...{head}",
+  "merges_url": "https://api.github.com/repos/jag1g13/pycgtool/merges",
+  "archive_url": "https://api.github.com/repos/jag1g13/pycgtool/{archive_format}{/ref}",
+  "downloads_url": "https://api.github.com/repos/jag1g13/pycgtool/downloads",
+  "issues_url": "https://api.github.com/repos/jag1g13/pycgtool/issues{/number}",
+  "pulls_url": "https://api.github.com/repos/jag1g13/pycgtool/pulls{/number}",
+  "milestones_url": "https://api.github.com/repos/jag1g13/pycgtool/milestones{/number}",
+  "notifications_url": "https://api.github.com/repos/jag1g13/pycgtool/notifications{?since,all,participating}",
+  "labels_url": "https://api.github.com/repos/jag1g13/pycgtool/labels{/name}",
+  "releases_url": "https://api.github.com/repos/jag1g13/pycgtool/releases{/id}",
+  "deployments_url": "https://api.github.com/repos/jag1g13/pycgtool/deployments",
+  "created_at": "2016-02-16T10:39:28Z",
+  "updated_at": "2021-03-05T07:23:47Z",
+  "pushed_at": "2021-03-27T14:01:53Z",
+  "git_url": "git://github.com/jag1g13/pycgtool.git",
+  "ssh_url": "git@github.com:jag1g13/pycgtool.git",
+  "clone_url": "https://github.com/jag1g13/pycgtool.git",
+  "svn_url": "https://github.com/jag1g13/pycgtool",
+  "homepage": "",
+  "size": 8193,
+  "stargazers_count": 24,
+  "watchers_count": 24,
+  "language": "Python",
+  "has_issues": true,
+  "has_projects": true,
+  "has_downloads": true,
+  "has_wiki": true,
+  "has_pages": true,
+  "forks_count": 6,
+  "mirror_url": null,
+  "archived": false,
+  "disabled": false,
+  "open_issues_count": 8,
+  "license": {
+    "key": "gpl-3.0",
+    "name": "GNU General Public License v3.0",
+    "spdx_id": "GPL-3.0",
+    "url": "https://api.github.com/licenses/gpl-3.0",
+    "node_id": "MDc6TGljZW5zZTk="
+  },
+  "forks": 6,
+  "open_issues": 8,
+  "watchers": 24,
+  "default_branch": "master",
+  "permissions": {
+    "admin": true,
+    "push": true,
+    "pull": true
+  },
+  "temp_clone_token": "",
+  "network_count": 6,
+  "subscribers_count": 8
+}

@@ -1,4 +1,5 @@
 import itertools
+import logging
 import typing
 
 import click
@@ -8,7 +9,7 @@ from github_analysis.fetch import fetch_repos
 
 @click.group()
 def cli():
-    pass
+    logging.basicConfig(level=logging.INFO)
 
 
 @cli.command()
