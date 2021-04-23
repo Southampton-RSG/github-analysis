@@ -51,7 +51,9 @@ class FileConnector(Connector):
             with open(location) as fp:
                 response = fp.read()
                 content = response.split('\n\n')[1]
-                return json.loads(content)
+                content = json.loads(content)
+                content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
+                return content
 
         except FileNotFoundError as exc:
             raise ResponseNotFoundError from exc
@@ -66,4 +68,6 @@ class RequestsConnector(Connector):
         if not r.ok:
             raise ResponseNotFoundError
 
-        return r.json()
+        content = r.json()
+        content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
+        return content
