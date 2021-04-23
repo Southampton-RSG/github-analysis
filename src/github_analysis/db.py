@@ -8,9 +8,12 @@ client = pymongo.MongoClient(database_url)
 db = client['github']
 
 
-def collection(name: str, indexes: typing.Iterable[str]):
+def collection(name: str, indexes: typing.Optional[typing.Iterable[str]] = None):
     collection = db[name]
-    for index in indexes:
-        collection.create_index(index)
+    collection.create_index('_repo_name')
+
+    if indexes is not None:
+        for index in indexes:
+            collection.create_index(index)
 
     return collection

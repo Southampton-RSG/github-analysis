@@ -14,25 +14,7 @@ class ResponseNotFoundError(ValueError):
     pass
 
 
-def try_all(connectors, connector_method: str = 'get'):
-    def inner(**kwargs) -> JSONType:
-        for connector in connectors:
-            try:
-                return getattr(connector, connector_method)(**kwargs)
-
-            except ResponseNotFoundError:
-                pass
-
-        raise ResponseNotFoundError
-
-    return inner
-
-
-class Connector(abc.ABC):
-    def __init__(self, location_pattern: str, **kwargs):
-        self._location_pattern = location_pattern
-        self._kwargs = kwargs
-
+class BaseConnector(abc.ABC):
     @abc.abstractmethod
     def get(self, **kwargs) -> JSONType:
         """Get the JSON representation of a record from a data source.
@@ -41,6 +23,28 @@ class Connector(abc.ABC):
         connector was initialised.
         """
         raise NotImplementedError
+
+
+class TryEachConnector(BaseConnector):
+    """Connector which tries a number of subconnectors, returning the first result."""
+    def __init__(self, *connectors: BaseConnector):
+        self._connectors = connectors
+
+    def get(self, **kwargs) -> JSONType:
+        for connector in self._connectors:
+            try:
+                return connector.get(**kwargs)
+
+            except ResponseNotFoundError:
+                pass
+
+        raise ResponseNotFoundError
+
+
+class Connector(BaseConnector):
+    def __init__(self, location_pattern: str, **kwargs):
+        self._location_pattern = location_pattern
+        self._kwargs = kwargs
 
 
 class FileConnector(Connector):
