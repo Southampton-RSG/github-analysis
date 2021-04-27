@@ -3,6 +3,7 @@ import json
 import logging
 import typing
 
+from decouple import config
 import requests
 
 logger = logging.getLogger(__name__)
@@ -75,3 +76,16 @@ class RequestsConnector(Connector):
         content = r.json()
         content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
         return content
+
+
+class GitHubConnector(RequestsConnector):
+    def __init__(self, location_pattern: str, **kwargs):
+        location_pattern = 'https://api.github.com/' + location_pattern.lstrip('/')
+        super().__init__(location_pattern, **kwargs)
+
+    def get(self, **kwargs) -> JSONType:
+        headers = kwargs.get('headers', {})
+        headers.update({'Authorization': f'Token {config("GITHUB_AUTH_TOKEN")}'})
+        kwargs['headers'] = headers
+
+        return super().get(**kwargs)
