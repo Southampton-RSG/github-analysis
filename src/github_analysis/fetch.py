@@ -48,11 +48,22 @@ def make_fetch_readmes():
 
 
 def make_fetch_repos():
-    collection = db.collection('repos', indexes=['_repo_name'])
+    collection = db.collection('repos')
 
     connector = connectors.TryEachConnector(
         connectors.FileConnector('REPOdata.d/{owner}+{repo}.response'),
         connectors.RequestsConnector('https://api.github.com/repos/{owner}/{repo}',
+                                     headers={'Authorization': f'Token {config("GITHUB_AUTH_TOKEN")}'}))
+
+    return make_fetcher(collection, connector)
+
+
+def make_fetch_users():
+    collection = db.collection('users')
+
+    connector = connectors.TryEachConnector(
+        connectors.FileConnector('USERdata./{owner}.response'),
+        connectors.RequestsConnector('https://api.github.com/users/{owner}',
                                      headers={'Authorization': f'Token {config("GITHUB_AUTH_TOKEN")}'}))
 
     return make_fetcher(collection, connector)

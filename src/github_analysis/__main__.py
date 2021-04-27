@@ -23,6 +23,7 @@ def fetch_all(repos: typing.Iterable[str], repo_file: typing.Optional[click.File
     fetchers = [
         fetch.make_fetch_repos(),
         fetch.make_fetch_readmes(),
+        fetch.make_fetch_users(),
     ]
 
     for repo in repos:
