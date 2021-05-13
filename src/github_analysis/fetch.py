@@ -25,7 +25,7 @@ def make_fetcher(collection_name: str,
                 response = transformer(response)
 
                 collection.replace_one({'_repo_name': response['_repo_name']}, response, upsert=True)
-                logger.info('Fetched data for repo: %s', repo_name)
+                logger.info('Fetched %s for repo: %s', collection_name, repo_name)
 
             except connectors.ResponseNotFoundError:
                 logger.warning('Repo not found: %s', repo_name)
@@ -36,20 +36,27 @@ def make_fetcher(collection_name: str,
     return fetch
 
 
-def make_fetch_readmes():
-    def transformer(response: connectors.JSONType) -> connectors.JSONType:
-        content = base64.b64decode(response['content'])
-        response['_content_decoded'] = content.decode('utf-8')
+class Fetcher:
+    """Static class to hold fetchers for each data type."""
+    @classmethod
+    def all(cls):
+        return [getattr(cls, name)() for name in cls.__dict__ if name.startswith('make_fetch')]
 
-        return response
+    @staticmethod
+    def make_fetch_readmes():
+        def transformer(response: connectors.JSONType) -> connectors.JSONType:
+            content = base64.b64decode(response['content'])
+            response['_content_decoded'] = content.decode('utf-8')
 
-    return make_fetcher('readmes', 'READMEURLs.d/{owner}+{repo}.response', '/repos/{owner}/{repo}/readme',
-                        transformer)
+            return response
 
+        return make_fetcher('readmes', 'READMEURLs.d/{owner}+{repo}.response', '/repos/{owner}/{repo}/readme',
+                            transformer)
 
-def make_fetch_repos():
-    return make_fetcher('repos', 'REPOdata.d/{owner}+{repo}.response', '/repos/{owner}/{repo}')
+    @staticmethod
+    def make_fetch_repos():
+        return make_fetcher('repos', 'REPOdata.d/{owner}+{repo}.response', '/repos/{owner}/{repo}')
 
-
-def make_fetch_users():
-    return make_fetcher('users', 'USERdata.d/{owner}.response', '/users/{owner}')
+    @staticmethod
+    def make_fetch_users():
+        return make_fetcher('users', 'USERdata.d/{owner}.response', '/users/{owner}')

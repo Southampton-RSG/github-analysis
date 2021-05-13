@@ -20,12 +20,6 @@ def fetch_all(repos: typing.Iterable[str], repo_file: typing.Optional[click.File
     if repo_file is not None:
         repos = itertools.chain(repos, map(str.strip, repo_file))
 
-    fetchers = [
-        fetch.make_fetch_repos(),
-        fetch.make_fetch_readmes(),
-        fetch.make_fetch_users(),
-    ]
-
     for repo in repos:
-        for fetcher in fetchers:
+        for fetcher in fetch.Fetcher.all():
             fetcher(repo, force=force)
