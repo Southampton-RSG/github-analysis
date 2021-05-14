@@ -6,6 +6,10 @@
 venv/
 *.pyc
 
+# Testing
+.tox/
+.coverage
+
 # Legacy
 /bin/
 
