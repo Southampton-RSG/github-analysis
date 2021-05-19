@@ -21,6 +21,15 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: mongouser
+          MONGO_INITDB_ROOT_PASSWORD: mongopass
+
     steps:
     - uses: actions/checkout@v2
 
@@ -48,3 +57,6 @@ jobs:
     - name: Run Tests / Linter
       run: |
         tox
+      env:
+        GITHUB_AUTH_USER: ${{ secrets.AUTH_USER }}
+        GITHUB_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
