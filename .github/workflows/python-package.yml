@@ -58,4 +58,5 @@ jobs:
       run: |
         tox
       env:
+        DATABASE_URL: mongodb://mongouser:mongopass@localhost:27017/
         GITHUB_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
