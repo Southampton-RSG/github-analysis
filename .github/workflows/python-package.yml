@@ -1,0 +1,62 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python package
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  build:
+    strategy:
+      # Limit parallel builds so we don't waste credits if one fails
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        python-version: ["3.8"]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: mongouser
+          MONGO_INITDB_ROOT_PASSWORD: mongopass
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.python-version }}-pip-
+          ${{ runner.os }}-${{ matrix.python-version }}-
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox
+
+    - name: Run Tests / Linter
+      run: |
+        tox
+      env:
+        DATABASE_URL: mongodb://mongouser:mongopass@localhost:27017/
+        GITHUB_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}

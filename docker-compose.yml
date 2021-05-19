@@ -6,7 +6,6 @@ services:
     build: .
     environment:
       - ${DATABASE_URL}
-      - ${GITHUB_AUTH_USER}
       - ${GITHUB_AUTH_TOKEN}
     depends_on:
       - mongo
