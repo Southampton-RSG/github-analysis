@@ -15,11 +15,15 @@ def cli():
 @cli.command()
 @click.option('-r', '--repo', 'repos', required=False, multiple=True)  # yapf: disable
 @click.option('-f', '--file', 'repo_file', required=False, type=click.File('r'))  # yapf: disable
-@click.option('--force', is_flag=True, default=False)
-def fetch_all(repos: typing.Iterable[str], repo_file: typing.Optional[click.File], force: bool = False):
+def fetch_all(repos: typing.Iterable[str], repo_file: typing.Optional[click.File]):
     if repo_file is not None:
+        # Click has already opened the file for us
         repos = itertools.chain(repos, map(str.strip, repo_file))
 
     for repo in repos:
-        for fetcher in fetch.Fetcher.all():
-            fetcher(repo, force=force)
+        for fetcher in fetch.Fetcher.make_all():
+            fetcher(repo)
+
+
+if __name__ == '__main__':
+    cli()

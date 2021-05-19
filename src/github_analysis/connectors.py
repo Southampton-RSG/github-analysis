@@ -8,7 +8,7 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-JSONType = typing.Dict[str, typing.Any]
+JSONType = typing.Union[typing.Dict[str, 'JSONType'], typing.List['JSONType']]
 
 
 class ResponseNotFoundError(ValueError):
@@ -66,15 +66,29 @@ class FileConnector(Connector):
 
 class RequestsConnector(Connector):
     """Connector to get JSON data from a URL using Requests."""
-    def get(self, **kwargs) -> JSONType:
+    def get(self, *, follow_pagination: bool = True, **kwargs) -> JSONType:
         location = self._location_pattern.format(**kwargs)
         r = requests.get(location, **self._kwargs)
 
         if not r.ok:
             raise ResponseNotFoundError
 
-        content = r.json()
-        content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
+        content: JSONType = r.json()
+
+        if follow_pagination and isinstance(content, list):
+            while 'next' in r.links:
+                r = requests.get(r.links['next']['url'], **self._kwargs)
+                # Was found but pagination failed in another way - raise directly
+                r.raise_for_status()
+
+                content.extend(r.json())
+
+        try:
+            content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
+
+        except TypeError:
+            pass
+
         return content
 
 
