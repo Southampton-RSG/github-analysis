@@ -9,7 +9,7 @@ data_dir = pathlib.Path(__file__).parent.joinpath('data')
 
 def _test_repo(fetcher: fetch.FetcherFunc, repo_name: str) -> None:
     """Fetch data from a connector and assert correct response."""
-    content = fetcher(repo_name, force=True)
+    content = fetcher(repo_name)
 
     assert 'name' in content
     assert content['name'] == repo_name.split('/')[1]
