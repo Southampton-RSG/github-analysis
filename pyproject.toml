@@ -22,6 +22,7 @@ pytest = "^6.2.3"
 
 [tool.yapf]
 COLUMN_LIMIT = 110
+DEDENT_CLOSING_BRACKETS = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
