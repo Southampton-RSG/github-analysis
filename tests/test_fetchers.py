@@ -28,24 +28,22 @@ def test_make_repo_fetcher():
 
 
 def test_make_all_fetchers():
-    fetchers = fetch.Fetcher.make_all()
+    fetchers = fetch.Fetcher().make_all()
 
     assert isinstance(fetchers, typing.Iterable)
 
     for fetcher in fetchers:
         assert isinstance(fetcher, typing.Callable)
 
-        assert fetcher('jag1g13/pycgtool') is not None
-
 
 def test_fetch_repos():
-    fetcher = fetch.Fetcher.make_fetch_repos()
+    fetcher = fetch.Fetcher().make_fetch_repos()
 
     _test_repo(fetcher, 'jag1g13/pycgtool')
 
 
 def test_fetch_readmes():
-    fetcher = fetch.Fetcher.make_fetch_readmes()
+    fetcher = fetch.Fetcher().make_fetch_readmes()
 
     repo_name = 'jag1g13/pycgtool'
     content = fetcher(repo_name)
@@ -58,10 +56,36 @@ def test_fetch_readmes():
 
 
 def test_fetch_users():
-    fetcher = fetch.Fetcher.make_fetch_users()
+    fetcher = fetch.Fetcher().make_fetch_users()
 
     repo_name = 'jag1g13/pycgtool'
     content = fetcher(repo_name)
 
     assert 'login' in content
     assert content['login'] == 'jag1g13'
+
+
+def test_fetch_issues():
+    fetcher = fetch.Fetcher().make_fetch_issues()
+
+    repo_name = 'jag1g13/pycgtool'
+    content: typing.Mapping = fetcher(repo_name)
+
+    assert len(content) > 0
+
+    first_entry = content[0]
+    assert 'title' in first_entry
+    assert 'number' in first_entry
+
+
+def test_fetch_commits():
+    fetcher = fetch.Fetcher().make_fetch_commits()
+
+    repo_name = 'jag1g13/pycgtool'
+    content: typing.Mapping = fetcher(repo_name)
+
+    assert len(content) > 0
+
+    first_entry = content[0]
+    assert 'author' in first_entry
+    assert 'committer' in first_entry

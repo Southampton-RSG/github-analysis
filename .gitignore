@@ -8,10 +8,13 @@ venv/
 
 # Testing
 .tox/
+/data/
 .coverage
 
-# Legacy
+# Other components
 /bin/
+/github-provenance/
+/GHAllRepos.d/
 
 # IDEs
 .vscode/

@@ -1,5 +1,6 @@
 import base64
 import logging
+import pathlib
 import typing
 
 from github_analysis import connectors, db
@@ -7,6 +8,7 @@ from github_analysis import connectors, db
 logger = logging.getLogger(__name__)
 
 FetcherFunc = typing.Callable[[str], connectors.JSONType]
+PathLike = typing.Union[str, pathlib.Path]
 
 
 def make_fetcher(
@@ -46,7 +48,6 @@ def make_fetcher(
 
             update_mongo(response)
 
-            logger.info('Fetched data for repo: %s', repo_name)
             return response
 
         except connectors.ResponseNotFoundError:
@@ -57,14 +58,21 @@ def make_fetcher(
 
 
 class Fetcher:
-    """Static class to hold fetchers for each content type."""
-    @classmethod
-    def make_all(cls) -> typing.List[FetcherFunc]:
-        """Get a list of prepared fetchers for each content type."""
-        return [getattr(cls, name)() for name in cls.__dict__ if name.startswith('make_fetch')]
+    """Build fetchers for each content type."""
+    def __init__(self, file_connector_location: typing.Optional[PathLike] = None):
+        if file_connector_location is None:
+            file_connector_location = pathlib.Path.cwd()
 
-    @staticmethod
-    def make_fetch_readmes() -> FetcherFunc:
+        self.file_connector_location = pathlib.Path(file_connector_location)
+
+    def make_all(self) -> typing.List[FetcherFunc]:
+        """Get a list of prepared fetchers for each content type.
+
+        Any attribute of this class beginning with 'make_fetch' will be used to build a fetcher.
+        """
+        return [getattr(self, name)() for name in type(self).__dict__ if name.startswith('make_fetch')]
+
+    def make_fetch_readmes(self) -> FetcherFunc:
         def transformer(response: connectors.JSONType, **kwargs) -> connectors.JSONType:
             content = base64.b64decode(response['content'])
             response['_content_decoded'] = content.decode('utf-8')
@@ -74,42 +82,54 @@ class Fetcher:
 
         collection = db.collection('readmes')
 
+        file_connector_path = str(self.file_connector_location.joinpath('READMEURLs.d/{owner}+{repo}.response'))
         connector = connectors.TryEachConnector(
-            connectors.FileConnector('READMEURLs.d/{owner}+{repo}.response'),
+            connectors.FileConnector(file_connector_path),
             connectors.GitHubConnector('/repos/{owner}/{repo}/readme')
         )
 
         return make_fetcher(collection, connector, transformer=transformer, key_name='_repo_name')
 
-    @staticmethod
-    def make_fetch_repos() -> FetcherFunc:
+    def make_fetch_repos(self) -> FetcherFunc:
         collection = db.collection('repos')
 
+        file_connector_path = str(self.file_connector_location.joinpath('REPOdata.d/{owner}+{repo}.response'))
         connector = connectors.TryEachConnector(
-            connectors.FileConnector('REPOdata.d/{owner}+{repo}.response'),
+            connectors.FileConnector(file_connector_path),
             connectors.GitHubConnector('/repos/{owner}/{repo}')
         )
 
         return make_fetcher(collection, connector)
 
-    @staticmethod
-    def make_fetch_users() -> FetcherFunc:
+    def make_fetch_users(self) -> FetcherFunc:
         collection = db.collection('users')
 
+        file_connector_path = str(self.file_connector_location.joinpath('USERdata.d/{owner}+{repo}.response'))
         connector = connectors.TryEachConnector(
-            connectors.FileConnector('USERdata.d/{owner}.response'),
+            connectors.FileConnector(file_connector_path),
             connectors.GitHubConnector('/users/{owner}')
         )
 
         return make_fetcher(collection, connector)
 
-    @staticmethod
-    def make_fetch_issues() -> FetcherFunc:
+    def make_fetch_issues(self) -> FetcherFunc:
         collection = db.collection('issues')
 
+        file_connector_path = str(self.file_connector_location.joinpath('ISSUES.d/{owner}+{repo}.responses'))
         connector = connectors.TryEachConnector(
-            connectors.FileConnector('ISSUES.d/{owner}+{repo}.responses'),
+            connectors.FileConnector(file_connector_path),
             connectors.GitHubConnector('/repos/{owner}/{repo}/issues?state=all&per_page=100')
+        )
+
+        return make_fetcher(collection, connector)
+
+    def make_fetch_commits(self) -> FetcherFunc:
+        collection = db.collection('commits')
+
+        file_connector_path = str(self.file_connector_location.joinpath('COMMITS.d/{owner}+{repo}.responses'))
+        connector = connectors.TryEachConnector(
+            connectors.FileConnector(file_connector_path),
+            connectors.GitHubConnector('/repos/{owner}/{repo}/commits?per_page=100')
         )
 
         return make_fetcher(collection, connector)

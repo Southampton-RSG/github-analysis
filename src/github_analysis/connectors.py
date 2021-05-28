@@ -1,6 +1,8 @@
 import abc
+import datetime
 import json
 import logging
+import time
 import typing
 
 from decouple import config
@@ -13,6 +15,24 @@ JSONType = typing.Union[typing.Dict[str, 'JSONType'], typing.List['JSONType']]
 
 class ResponseNotFoundError(ValueError):
     pass
+
+
+def wait_until(end_datetime: datetime.datetime) -> None:
+    """Wait until a given time.
+
+    This code was taken with modification from https://stackoverflow.com/posts/54774814/revisions
+    under the CC BY-SA 4.0 license.
+    """
+    while True:
+        delta = (end_datetime - datetime.datetime.now()).total_seconds()
+
+        if delta < 0:
+            return  # In case end_datetime was in past to begin with
+
+        time.sleep(max(delta / 2, 0.1))
+
+        if delta <= 0.1:
+            return
 
 
 class BaseConnector(abc.ABC):
@@ -52,15 +72,19 @@ class FileConnector(Connector):
     """Connector to get JSON data from curl responses saved to file."""
     def get(self, **kwargs) -> JSONType:
         location = self._location_pattern.format(**kwargs)
+        logger.debug('Trying file connector')
         try:
             with open(location) as fp:
                 response = fp.read()
                 content = response.split('\n\n')[1]
                 content = json.loads(content)
                 content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
+
+                logger.debug('Fetched data from file: %s', location)
                 return content
 
         except FileNotFoundError as exc:
+            logger.debug('File connector failed')
             raise ResponseNotFoundError from exc
 
 
@@ -68,9 +92,20 @@ class RequestsConnector(Connector):
     """Connector to get JSON data from a URL using Requests."""
     def get(self, *, follow_pagination: bool = True, **kwargs) -> JSONType:
         location = self._location_pattern.format(**kwargs)
+        logger.debug('Trying requests connector')
+
         r = requests.get(location, **self._kwargs)
 
         if not r.ok:
+            if r.headers.get('x-ratelimit-remaining', -1) == '0':
+                reset_time = datetime.datetime.fromtimestamp(int(r.headers['x-ratelimit-reset']))
+
+                logger.warning('Rate limited - waiting until %s', reset_time)
+                wait_until(reset_time)
+
+                return self.get(follow_pagination=follow_pagination, **kwargs)
+
+            logger.debug('Requests connector failed')
             raise ResponseNotFoundError
 
         content: JSONType = r.json()
@@ -89,17 +124,16 @@ class RequestsConnector(Connector):
         except TypeError:
             pass
 
+        logger.debug('Fetched data from URL: %s', location)
         return content
 
 
 class GitHubConnector(RequestsConnector):
     def __init__(self, location_pattern: str, **kwargs):
         location_pattern = 'https://api.github.com/' + location_pattern.lstrip('/')
-        super().__init__(location_pattern, **kwargs)
 
-    def get(self, **kwargs) -> JSONType:
         headers = kwargs.get('headers', {})
-        headers.update({'Authorization': f'Token {config("GITHUB_AUTH_TOKEN")}'})
+        headers.update({'Authorization': f'token {config("GITHUB_AUTH_TOKEN")}'})
         kwargs['headers'] = headers
 
-        return super().get(**kwargs)
+        super().__init__(location_pattern, **kwargs)
