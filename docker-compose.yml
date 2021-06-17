@@ -4,11 +4,14 @@ services:
   gha:
     image: gha
     build: .
+    env_file: .env
     environment:
-      - ${DATABASE_URL}
-      - ${GITHUB_AUTH_TOKEN}
+      DATABASE_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/
     depends_on:
       - mongo
+    volumes:
+      - ./00REPOS:/srv/00REPOS:ro,z
+    command: gha fetch-all -f /srv/00REPOS
 
   mongo:
     image: mongo
@@ -18,6 +21,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - db:/data/db
 
   mongo-express:
     image: mongo-express
@@ -29,3 +34,6 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
     depends_on:
       - mongo
+
+volumes:
+  db:
