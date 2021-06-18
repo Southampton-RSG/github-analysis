@@ -6,6 +6,7 @@ import typing
 import click
 
 from github_analysis import fetch
+from github_analysis.connectors import ResponseNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,11 @@ def fetch_all(
 
     for repo in repos:
         for fetcher in fetchers:
-            fetcher(repo)
+            try:
+                fetcher(repo)
+
+            except ResponseNotFoundError:
+                logger.warning('Response not found for repo: %s', repo)
 
         logger.info('Updated records for repo: %s', repo)
 
