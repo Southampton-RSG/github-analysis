@@ -18,7 +18,7 @@ def cli():
     logging.basicConfig(level=logging.INFO)
 
 
-def fetch_for_repos(repos: typing.Iterable[str], fetchers: typing.Collection[fetch.FetcherFunc]) -> None:
+def fetch_for_repos(repos: typing.Collection[str], fetchers: typing.Collection[fetch.FetcherFunc]) -> None:
     """Apply each fetcher to each repo.
 
     Run a fetcher on all repos before moving on to the next fetcher.
@@ -38,7 +38,7 @@ def fetch_for_repos(repos: typing.Iterable[str], fetchers: typing.Collection[fet
 def fetch_all(repos: typing.Iterable[str], repo_file: typing.Optional[click.File]):
     if repo_file is not None:
         # Click has already opened the file for us
-        repos = itertools.chain(repos, map(str.strip, repo_file))
+        repos = list(itertools.chain(repos, map(str.strip, repo_file)))
 
     fetchers = fetch.GitHubFetcher().make_all()
     fetch_for_repos(repos, fetchers)
@@ -53,7 +53,7 @@ def import_existing(
 ):
     if repo_file is not None:
         # Click has already opened the file for us
-        repos = itertools.chain(repos, map(str.strip, repo_file))
+        repos = list(itertools.chain(repos, map(str.strip, repo_file)))
 
     fetchers = fetch.FileFetcher(import_root).make_all()
     fetch_for_repos(repos, fetchers)

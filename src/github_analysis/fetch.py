@@ -28,14 +28,17 @@ def make_fetcher(
     :param transformer: Function applied to the response before saving
     :param key_name: MonogDB field name to use for update query
     """
-    def update_mongo(response: connectors.JSONType):
+    def update_mongo(response: connectors.JSONType) -> None:
         """Update a record or multiple records for a response in the MongoDB collection."""
         if isinstance(response, list):
-            for item in response:
-                collection.replace_one({key_name: item[key_name]}, item, upsert=True)
+            map(update_mongo, response)
 
         else:
-            collection.replace_one({key_name: response[key_name]}, response, upsert=True)
+            try:
+                collection.replace_one({key_name: response[key_name]}, response, upsert=True)
+
+            except KeyError:
+                logger.warning('Response did not contain expected key: %s', key_name)
 
     def fetch(repo_name: str) -> connectors.JSONType:
         """Function to fetch data for a specific repo.
@@ -123,9 +126,9 @@ class GitHubFetcher(Fetcher):
     connector_class = connectors.GitHubConnector
 
     fetcher_paths = {
-        'readmes': '/repos/{owner}/{repo}/readme',
         'repos': '/repos/{owner}/{repo}',
         'users': '/users/{owner}',
+        'readmes': '/repos/{owner}/{repo}/readme',
         'issues': '/repos/{owner}/{repo}/issues?state=all&per_page=100',
         'commits': '/repos/{owner}/{repo}/commits?per_page=100',
     }
@@ -135,9 +138,9 @@ class FileFetcher(Fetcher):
     connector_class = connectors.FileConnector
 
     fetcher_paths = {
-        'readmes': 'READMEURLs.d/{owner}+{repo}.response',
         'repos': 'REPOdata.d/{owner}+{repo}.response',
         'users': 'USERdata.d/{owner}+{repo}.response',
+        'readmes': 'READMEURLs.d/{owner}+{repo}.response',
         'issues': 'ISSUES.d/{owner}+{repo}.responses',
         'commits': 'COMMITS.d/{owner}+{repo}.responses',
     }

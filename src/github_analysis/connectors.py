@@ -106,7 +106,12 @@ class FileConnector(Connector):
                     content = json.loads(content.strip())
 
                 except json.JSONDecodeError:
-                    content = join_curl_responses(response)
+                    try:
+                        content = join_curl_responses(response)
+
+                    except json.JSONDecodeError as exc:
+                        logger.warning('Parsing file failed: %s', location)
+                        raise ResponseNotFoundError from exc
 
                 try:
                     content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
