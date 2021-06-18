@@ -22,13 +22,22 @@ def test_make_repo_fetcher():
     collection = mock.Mock()
     connector = connectors.FileConnector(str(data_dir.joinpath('{owner}+{repo}.response')))
 
-    fetcher = fetch.make_fetcher(collection, connector)
+    fetcher = fetch.make_fetcher('TEST', collection, connector)
 
     _test_repo(fetcher, 'jag1g13/pycgtool')
 
 
-def test_make_all_fetchers():
-    fetchers = fetch.Fetcher().make_all()
+def test_make_all_fetchers_github():
+    fetchers = fetch.GitHubFetcher().make_all()
+
+    assert isinstance(fetchers, typing.Iterable)
+
+    for fetcher in fetchers:
+        assert isinstance(fetcher, typing.Callable)
+
+
+def test_make_all_fetchers_file():
+    fetchers = fetch.FileFetcher(data_dir).make_all()
 
     assert isinstance(fetchers, typing.Iterable)
 
@@ -37,13 +46,13 @@ def test_make_all_fetchers():
 
 
 def test_fetch_repos():
-    fetcher = fetch.Fetcher().make_fetch_repos()
+    fetcher = fetch.GitHubFetcher().make('repos')
 
     _test_repo(fetcher, 'jag1g13/pycgtool')
 
 
-def test_fetch_readmes():
-    fetcher = fetch.Fetcher().make_fetch_readmes()
+def test_fetch_readmes_github():
+    fetcher = fetch.GitHubFetcher().make('readmes')
 
     repo_name = 'jag1g13/pycgtool'
     content = fetcher(repo_name)
@@ -55,8 +64,8 @@ def test_fetch_readmes():
     assert content['_repo_name'] == repo_name
 
 
-def test_fetch_users():
-    fetcher = fetch.Fetcher().make_fetch_users()
+def test_fetch_users_github():
+    fetcher = fetch.GitHubFetcher().make('users')
 
     repo_name = 'jag1g13/pycgtool'
     content = fetcher(repo_name)
@@ -65,8 +74,8 @@ def test_fetch_users():
     assert content['login'] == 'jag1g13'
 
 
-def test_fetch_issues():
-    fetcher = fetch.Fetcher().make_fetch_issues()
+def test_fetch_issues_github():
+    fetcher = fetch.GitHubFetcher().make('issues')
 
     repo_name = 'jag1g13/pycgtool'
     content: typing.Mapping = fetcher(repo_name)
@@ -78,8 +87,8 @@ def test_fetch_issues():
     assert 'number' in first_entry
 
 
-def test_fetch_commits():
-    fetcher = fetch.Fetcher().make_fetch_commits()
+def test_fetch_commits_github():
+    fetcher = fetch.GitHubFetcher().make('commits')
 
     repo_name = 'jag1g13/pycgtool'
     content: typing.Mapping = fetcher(repo_name)

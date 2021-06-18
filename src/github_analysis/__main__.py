@@ -18,29 +18,45 @@ def cli():
     logging.basicConfig(level=logging.INFO)
 
 
+def fetch_for_repos(repos: typing.Iterable[str], fetchers: typing.Collection[fetch.FetcherFunc]) -> None:
+    """Apply each fetcher to each repo.
+
+    Run a fetcher on all repos before moving on to the next fetcher.
+    """
+    for fetcher in fetchers:
+        for repo in repos:
+            try:
+                fetcher(repo)
+
+            except ResponseNotFoundError:
+                pass
+
+
 @cli.command()
 @click.option('-r', '--repo', 'repos', required=False, multiple=True)  # yapf: disable
 @click.option('-f', '--file', 'repo_file', required=False, type=click.File('r'))  # yapf: disable
-@click.option('--file-connector-location', required=False, type=click.Path(dir_okay=True, file_okay=False))
-def fetch_all(
-    repos: typing.Iterable[str], repo_file: typing.Optional[click.File],
-    file_connector_location: typing.Optional[PathLike]
+def fetch_all(repos: typing.Iterable[str], repo_file: typing.Optional[click.File]):
+    if repo_file is not None:
+        # Click has already opened the file for us
+        repos = itertools.chain(repos, map(str.strip, repo_file))
+
+    fetchers = fetch.GitHubFetcher().make_all()
+    fetch_for_repos(repos, fetchers)
+
+
+@cli.command()
+@click.option('-r', '--repo', 'repos', required=False, multiple=True)  # yapf: disable
+@click.option('-f', '--file', 'repo_file', required=False, type=click.File('r'))  # yapf: disable
+@click.option('--import-root', required=True, type=click.Path(dir_okay=True, file_okay=False))
+def import_existing(
+    repos: typing.Iterable[str], repo_file: typing.Optional[click.File], import_root: PathLike
 ):
     if repo_file is not None:
         # Click has already opened the file for us
         repos = itertools.chain(repos, map(str.strip, repo_file))
 
-    fetchers = fetch.Fetcher(file_connector_location).make_all()
-
-    for repo in repos:
-        for fetcher in fetchers:
-            try:
-                fetcher(repo)
-
-            except ResponseNotFoundError:
-                logger.warning('Response not found for repo: %s', repo)
-
-        logger.info('Updated records for repo: %s', repo)
+    fetchers = fetch.FileFetcher(import_root).make_all()
+    fetch_for_repos(repos, fetchers)
 
 
 if __name__ == '__main__':

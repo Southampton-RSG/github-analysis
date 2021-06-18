@@ -37,6 +37,10 @@ def wait_until(end_datetime: datetime.datetime) -> None:
 
 class BaseConnector(abc.ABC):
     @abc.abstractmethod
+    def __init__(self, *args, **kwargs):
+        pass
+
+    @abc.abstractmethod
     def get(self, **kwargs) -> JSONType:
         """Get the JSON representation of a record from a data source.
 
@@ -68,6 +72,27 @@ class Connector(BaseConnector):
         self._kwargs = kwargs
 
 
+def join_curl_responses(response: str) -> JSONType:
+    """Join JSON blocks from concatenated cURL responses."""
+    # cURL headers are separated from content by a blank line
+    # The content starts with a '[' line for list-type responses
+    responses = response.split('\n\n[')
+
+    # Discard the first bit - it's just the first cURL header
+    responses = responses[1:]
+
+    # Strip the trailing cURL header and close bracket from the end of each block
+    responses = [r.rsplit('\n]\nHTTP', maxsplit=1)[0] for r in responses]
+
+    # Concatenate responses
+    responses = ','.join(responses)
+
+    # Add opening bracket
+    responses = '[' + responses
+
+    return json.loads(responses)
+
+
 class FileConnector(Connector):
     """Connector to get JSON data from curl responses saved to file."""
     def get(self, **kwargs) -> JSONType:
@@ -76,9 +101,18 @@ class FileConnector(Connector):
         try:
             with open(location) as fp:
                 response = fp.read()
-                content = response.split('\n\n')[1]
-                content = json.loads(content)
-                content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
+                content = response.split('\n\n', maxsplit=1)[1]
+                try:
+                    content = json.loads(content.strip())
+
+                except json.JSONDecodeError:
+                    content = join_curl_responses(response)
+
+                try:
+                    content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
+
+                except TypeError:
+                    pass
 
                 logger.debug('Fetched data from file: %s', location)
                 return content
