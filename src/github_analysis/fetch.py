@@ -31,7 +31,8 @@ def make_fetcher(
     def update_mongo(response: connectors.JSONType) -> None:
         """Update a record or multiple records for a response in the MongoDB collection."""
         if isinstance(response, list):
-            map(update_mongo, response)
+            for r in response:
+                update_mongo(r)
 
         else:
             try:
