@@ -134,6 +134,11 @@ class RequestsConnector(Connector):
         logger.debug('Trying requests connector')
 
         r = requests.get(location, **self._kwargs)
+        try:
+            logger.info('Rate limit remaining: %s', r.headers.get('x-ratelimit-remaining'))
+
+        except KeyError:
+            pass
 
         if not r.ok:
             if r.headers.get('x-ratelimit-remaining', -1) == '0':

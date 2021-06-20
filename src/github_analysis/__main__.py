@@ -4,6 +4,7 @@ import pathlib
 import typing
 
 import click
+from decouple import config
 
 from github_analysis import fetch
 from github_analysis.connectors import ResponseNotFoundError
@@ -15,7 +16,7 @@ PathLike = typing.Union[str, pathlib.Path]
 
 @click.group()
 def cli():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=config('LOG_LEVEL', default='INFO'))
 
 
 def fetch_for_repos(repos: typing.Collection[str], fetchers: typing.Collection[fetch.FetcherFunc]) -> None:
