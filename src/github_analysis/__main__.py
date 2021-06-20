@@ -41,11 +41,11 @@ def fetch_for_repos(
                 pass
 
 
-@cli.command()
+@cli.command(name='fetch')
 @click.option('-r', '--repo', 'repos', required=False, multiple=True)  # yapf: disable
 @click.option('-f', '--file', 'repo_file', required=False, type=click.File('r'))  # yapf: disable
 @click.option('--only', required=False, type=click.Choice(fetch.GitHubFetcher.fetcher_paths.keys()))
-def fetch_all(
+def fetch_(
     repos: typing.Iterable[str], repo_file: typing.Optional[click.File], only: typing.Optional[str] = None
 ):
     if repo_file is not None:
