@@ -130,8 +130,8 @@ class GitHubFetcher(Fetcher):
         'repos': '/repos/{owner}/{repo}',
         'users': '/users/{owner}',
         'readmes': '/repos/{owner}/{repo}/readme',
-        'issues': '/repos/{owner}/{repo}/issues?state=all&per_page=100',
-        'commits': '/repos/{owner}/{repo}/commits?per_page=100',
+        'issues': '/repos/{owner}/{repo}/issues?state=all&per_page=1000',
+        'commits': '/repos/{owner}/{repo}/commits?per_page=1000',
     }
 
 

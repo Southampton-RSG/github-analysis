@@ -129,10 +129,7 @@ class FileConnector(Connector):
 
 class RequestsConnector(Connector):
     """Connector to get JSON data from a URL using Requests."""
-    def get(self, *, follow_pagination: bool = True, **kwargs) -> JSONType:
-        location = self._location_pattern.format(**kwargs)
-        logger.debug('Trying requests connector')
-
+    def get_with_ratelimit(self, location: str, *, follow_pagination: bool = True, **kwargs) -> requests.Response:
         r = requests.get(location, **self._kwargs)
         try:
             logger.info('Rate limit remaining: %s', r.headers.get('x-ratelimit-remaining'))
@@ -147,18 +144,23 @@ class RequestsConnector(Connector):
                 logger.warning('Rate limited - waiting until %s', reset_time)
                 wait_until(reset_time)
 
-                return self.get(follow_pagination=follow_pagination, **kwargs)
+                return self.get_with_ratelimit(location, follow_pagination=follow_pagination, **kwargs)
 
             logger.debug('Requests connector failed')
             raise ResponseNotFoundError
 
+        return r
+
+    def get(self, *, follow_pagination: bool = True, **kwargs) -> JSONType:
+        location = self._location_pattern.format(**kwargs)
+        logger.debug('Trying requests connector')
+
+        r = self.get_with_ratelimit(location, follow_pagination=follow_pagination, **kwargs)
         content: JSONType = r.json()
 
         if follow_pagination and isinstance(content, list):
             while 'next' in r.links:
-                r = requests.get(r.links['next']['url'], **self._kwargs)
-                # Was found but pagination failed in another way - raise directly
-                r.raise_for_status()
+                r = self.get_with_ratelimit(r.links['next']['url'], follow_pagination=follow_pagination, **kwargs)
 
                 content.extend(r.json())
 
