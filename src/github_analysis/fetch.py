@@ -78,7 +78,12 @@ class Fetcher(abc.ABC):
 
     @staticmethod
     def transformer_readmes(response: connectors.JSONType, **kwargs) -> connectors.JSONType:
-        content = base64.b64decode(response['content'])
+        try:
+            content = base64.b64decode(response['content'])
+
+        except KeyError as exc:
+            raise connectors.ResponseNotFoundError from exc
+
         response['_content_decoded'] = content.decode('utf-8')
         response['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
 
