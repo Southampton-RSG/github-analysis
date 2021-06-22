@@ -10,7 +10,23 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-JSONType = typing.Union[typing.Dict[str, 'JSONType'], typing.List['JSONType']]
+JSONType = typing.Union[
+    typing.Mapping[str, 'JSONType'],
+    typing.List['JSONType'],
+    str,
+    int,
+    float,
+    bool,
+    None,
+]  # yapf: disable
+
+ConnectorSingleResponseType = typing.Dict[str, JSONType]
+ConnectorMultipleResponseType = typing.List[typing.Dict[str, JSONType]]
+
+ConnectorResponseType = typing.Union[
+    ConnectorSingleResponseType,
+    ConnectorMultipleResponseType,
+]  # yapf: disable
 
 
 class ResponseNotFoundError(ValueError):
@@ -40,8 +56,17 @@ class BaseConnector(abc.ABC):
     def __init__(self, *args, **kwargs):
         pass
 
+    def get(self, **kwargs) -> ConnectorResponseType:
+        """Get the JSON representation of a record from a data source.
+
+        Keyword arguments populate the location pattern given when the
+        connector was initialised.
+        """
+        response: ConnectorResponseType = self._get(**kwargs)
+        return self._annotate_response(response, '_repo_name', f'{kwargs["owner"]}/{kwargs["repo"]}')
+
     @abc.abstractmethod
-    def get(self, **kwargs) -> JSONType:
+    def _get(self, **kwargs) -> ConnectorResponseType:
         """Get the JSON representation of a record from a data source.
 
         Keyword arguments populate the location pattern given when the
@@ -49,13 +74,27 @@ class BaseConnector(abc.ABC):
         """
         raise NotImplementedError
 
+    @classmethod
+    def _annotate_response(cls, response: ConnectorResponseType, key: str, value: str) -> ConnectorResponseType:
+        """Annotate the response (or responses if a list) with an additional field."""
+        # Response will always be either a JSON object...
+        if isinstance(response, dict):
+            response[key] = value
+
+        # or an array of objects
+        elif isinstance(response, list):
+            for item in response:
+                cls._annotate_response(item, key, value)
+
+        return response
+
 
 class TryEachConnector(BaseConnector):
     """Connector which tries a number of subconnectors, returning the first result."""
     def __init__(self, *connectors: BaseConnector):
         self._connectors = connectors
 
-    def get(self, **kwargs) -> JSONType:
+    def _get(self, **kwargs) -> ConnectorResponseType:
         for connector in self._connectors:
             try:
                 return connector.get(**kwargs)
@@ -72,7 +111,7 @@ class Connector(BaseConnector):
         self._kwargs = kwargs
 
 
-def join_curl_responses(response: str) -> JSONType:
+def join_curl_responses(response: str) -> ConnectorResponseType:
     """Join JSON blocks from concatenated cURL responses."""
     # cURL headers are separated from content by a blank line
     # The content starts with a '[' line for list-type responses
@@ -95,29 +134,24 @@ def join_curl_responses(response: str) -> JSONType:
 
 class FileConnector(Connector):
     """Connector to get JSON data from curl responses saved to file."""
-    def get(self, **kwargs) -> JSONType:
+    def _get(self, **kwargs) -> ConnectorResponseType:
         location = self._location_pattern.format(**kwargs)
         logger.debug('Trying file connector')
+
         try:
             with open(location) as fp:
                 response = fp.read()
-                content = response.split('\n\n', maxsplit=1)[1]
+
                 try:
-                    content = json.loads(content.strip())
+                    content: ConnectorResponseType = json.loads(response.split('\n\n', maxsplit=1)[1].strip())
 
                 except json.JSONDecodeError:
                     try:
-                        content = join_curl_responses(response)
+                        content: ConnectorResponseType = join_curl_responses(response)
 
                     except json.JSONDecodeError as exc:
                         logger.warning('Parsing file failed: %s', location)
                         raise ResponseNotFoundError from exc
-
-                try:
-                    content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
-
-                except TypeError:
-                    pass
 
                 logger.debug('Fetched data from file: %s', location)
                 return content
@@ -129,8 +163,9 @@ class FileConnector(Connector):
 
 class RequestsConnector(Connector):
     """Connector to get JSON data from a URL using Requests."""
-    def get_with_ratelimit(self, location: str, *, follow_pagination: bool = True, **kwargs) -> requests.Response:
+    def _get_with_ratelimit(self, location: str, *, follow_pagination: bool = True) -> requests.Response:
         r = requests.get(location, **self._kwargs)
+
         try:
             logger.info('Rate limit remaining: %s', r.headers.get('x-ratelimit-remaining'))
 
@@ -144,31 +179,25 @@ class RequestsConnector(Connector):
                 logger.warning('Rate limited - waiting until %s', reset_time)
                 wait_until(reset_time)
 
-                return self.get_with_ratelimit(location, follow_pagination=follow_pagination, **kwargs)
+                return self._get_with_ratelimit(location, follow_pagination=follow_pagination)
 
             logger.debug('Requests connector failed')
             raise ResponseNotFoundError
 
         return r
 
-    def get(self, *, follow_pagination: bool = True, **kwargs) -> JSONType:
+    def _get(self, *, follow_pagination: bool = True, **kwargs) -> ConnectorResponseType:
         location = self._location_pattern.format(**kwargs)
         logger.debug('Trying requests connector')
 
-        r = self.get_with_ratelimit(location, follow_pagination=follow_pagination, **kwargs)
-        content: JSONType = r.json()
+        r = self._get_with_ratelimit(location, follow_pagination=follow_pagination)
+        content: ConnectorResponseType = r.json()
 
         if follow_pagination and isinstance(content, list):
             while 'next' in r.links:
-                r = self.get_with_ratelimit(r.links['next']['url'], follow_pagination=follow_pagination, **kwargs)
+                r = self._get_with_ratelimit(r.links['next']['url'], follow_pagination=follow_pagination)
 
                 content.extend(r.json())
-
-        try:
-            content['_repo_name'] = f'{kwargs["owner"]}/{kwargs["repo"]}'
-
-        except TypeError:
-            pass
 
         logger.debug('Fetched data from URL: %s', location)
         return content
