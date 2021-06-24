@@ -153,6 +153,10 @@ class FileConnector(Connector):
                         logger.warning('Parsing file failed: %s', location)
                         raise ResponseNotFoundError from exc
 
+                except IndexError as exc:
+                    logger.warning('Likely no content in file: %s', location)
+                    raise ResponseNotFoundError from exc
+
                 logger.debug('Fetched data from file: %s', location)
                 return content
 
