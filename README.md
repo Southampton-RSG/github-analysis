@@ -36,4 +36,4 @@ docker-compose up -d
 gha fetch -f tests/data/UKRI_10.txt
 ```
 
-The database web console can be accessed at [http://localhost:8081/](http://localhost:8081/).
+The database web console can be accessed at [http://localhost:8081/db/github/](http://localhost:8081/db/github/).
