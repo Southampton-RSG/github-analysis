@@ -1,17 +1,17 @@
 version: '3.1'
 
 services:
-  gha:
-    image: gha
-    build: .
-    env_file: .env
-    environment:
-      DATABASE_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/
-    depends_on:
-      - mongo
-    volumes:
-      - ./00REPOS:/srv/00REPOS:ro,z
-    command: gha fetch-all -f /srv/00REPOS
+  # gha:
+  #   image: gha
+  #   build: .
+  #   env_file: .env
+  #   environment:
+  #     DATABASE_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/
+  #   depends_on:
+  #     - mongo
+  #   volumes:
+  #     - ./00REPOS:/srv/00REPOS:ro,z
+  #   command: gha fetch-all -f /srv/00REPOS
 
   mongo:
     image: mongo
