@@ -8,6 +8,7 @@ A Python tool for scraping a set of repositories from GitHub to a MongoDB databa
 Prerequisites:
 
 - Docker
+- Python 3.7 or greater
 
 1. Clone this repository and `cd` into the cloned directory
 2. Create and activate a virtual environment
@@ -28,7 +29,7 @@ pip install .
 2. Populate a `.env` file from `.env.template`
 3. Start MongoDB database containers
     - `docker-compose` can be installed with `pip` if necessary
-4. Start `gha` using a repo list
+4. Start `gha` using a repo list file
     - Virtual environment created above must still be active
 
 ```bash
