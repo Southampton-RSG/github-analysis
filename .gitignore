@@ -8,8 +8,10 @@ venv/
 
 # Testing
 .tox/
+.vagrant/
 /data/
 .coverage
+Vagrantfile
 
 # Other components
 /bin/
