@@ -75,6 +75,7 @@ class Fetcher(abc.ABC):
 
     fetcher_key_name = {
         'readmes': '_repo_name',
+        'events': 'id',
     }
 
     fetcher_paths: typing.Mapping
@@ -139,7 +140,9 @@ class GitHubFetcher(Fetcher):
         'repos': '/repos/{owner}/{repo}',
         'users': '/users/{owner}',
         'readmes': '/repos/{owner}/{repo}/readme',
+        'events': '/repos/{owner}/{repo}/events?per_page=1000',
         'issues': '/repos/{owner}/{repo}/issues?state=all&per_page=1000',
+        'comments': '/repos/{owner}/{repo}/issues/comments?per_page=1000',
         'commits': '/repos/{owner}/{repo}/commits?per_page=1000',
     }
 
@@ -151,6 +154,8 @@ class FileFetcher(Fetcher):
         'repos': 'REPOdata.d/{owner}+{repo}.response',
         'users': 'USERdata.d/{owner}+{repo}.response',
         'readmes': 'READMEURLs.d/{owner}+{repo}.response',
+        'events': 'EVENTS.d/{owner}+{repo}.responses',
         'issues': 'ISSUES.d/{owner}+{repo}.responses',
+        'comments': 'COMMENTS.d/{owner}+{repo}.responses',
         'commits': 'COMMITS.d/{owner}+{repo}.responses',
     }
