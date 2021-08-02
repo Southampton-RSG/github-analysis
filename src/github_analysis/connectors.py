@@ -56,6 +56,10 @@ class BaseConnector(abc.ABC):
     def __init__(self, *args, **kwargs):
         pass
 
+    @property
+    def name(self) -> str:
+        return type(self).__name__
+
     def get(self, **kwargs) -> ConnectorResponseType:
         """Get the JSON representation of a record from a data source.
 

@@ -17,7 +17,7 @@ PathLike = typing.Union[str, pathlib.Path]
 def make_fetcher(
     name: str,
     collection,
-    connector,
+    connector: connectors.BaseConnector,
     *,
     transformer: TransformerFunc = lambda x: x,
     key_name: str = 'node_id'
@@ -30,6 +30,8 @@ def make_fetcher(
     :param transformer: Function applied to the response before saving
     :param key_name: MonogDB field name to use for update query
     """
+    status_collection = db.collection('status')
+
     def update_mongo(response: connectors.ConnectorResponseType) -> None:
         """Update a record or multiple records for a response in the MongoDB collection."""
         if isinstance(response, dict):
@@ -57,6 +59,19 @@ def make_fetcher(
             response = transformer(response)
 
             update_mongo(response)
+            status_collection.update_one(
+                {'_repo_name': repo_name}, {
+                    '$currentDate': {
+                        f'{name}.timestamp': {
+                            '$type': 'timestamp'
+                        },
+                    },
+                    '$set': {
+                        f'{name}.connector': connector.name,
+                    }
+                },
+                upsert=True
+            )
 
             logger.info('Fetcher %s updated %s', name, repo_name)
             return response
