@@ -4,6 +4,8 @@ import logging
 import pathlib
 import typing
 
+from pymongo.errors import DocumentTooLarge
+
 from github_analysis import connectors, db
 
 logger = logging.getLogger(__name__)
@@ -14,7 +16,11 @@ TransformerFunc = typing.Callable[[connectors.ConnectorResponseType], connectors
 PathLike = typing.Union[str, pathlib.Path]
 
 
-class DataExists(ValueError):
+class DataExists(Exception):
+    pass
+
+
+class CouldNotStoreData(Exception):
     pass
 
 
@@ -45,9 +51,22 @@ def make_fetcher(
             except KeyError:
                 logger.warning('Response did not contain expected key: %s', key_name)
 
+            except DocumentTooLarge:
+                logger.error('Data did not fit within maximum record size')
+                raise
+
         elif isinstance(response, list):
+            hit_document_too_large = False
+
             for r in response:
-                update_mongo(r)
+                try:
+                    update_mongo(r)
+
+                except DocumentTooLarge:
+                    hit_document_too_large = True
+
+            if hit_document_too_large:
+                raise CouldNotStoreData()
 
     def fetch(repo_name: str, skip_existing: bool = False) -> connectors.ConnectorResponseType:
         """Function to fetch data for a specific repo.
@@ -95,6 +114,12 @@ def make_fetcher(
 
         except connectors.ResponseNotFoundError:
             logger.warning('Fetcher %s found no result for %s', name, repo_name)
+            raise
+
+        except CouldNotStoreData:
+            logger.error(
+                'Some data for repo %s could not be stored - it has not been logged as complete', repo
+            )
             raise
 
     return fetch

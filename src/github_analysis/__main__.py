@@ -45,7 +45,7 @@ def fetch_for_repos(
             try:
                 fetcher(repo, skip_existing)
 
-            except (fetch.DataExists, ResponseNotFoundError):
+            except (fetch.CouldNotStoreData, fetch.DataExists, ResponseNotFoundError):
                 pass
 
 
