@@ -63,14 +63,11 @@ def label_repo_set(repo: str, set_name: str):
 
 def clean_repo_list(repos: typing.Iterable[str], repo_file: typing.Optional[click.File]) -> typing.List[str]:
     """Concatentate repo list with repos from file and tag as belonging to set."""
-    if repo_file is None:
-        repos = list(repos)
-
-    else:
+    if repo_file is not None:
         # Click has already opened the file for us
-        repos = list(itertools.chain(repos, map(str.strip, repo_file)))
+        repos = itertools.chain(repos, map(str.strip, repo_file))
 
-    return repos
+    return [repo for repo in repos if not repo.startswith('#')]
 
 
 @cli.command()
