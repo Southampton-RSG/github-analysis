@@ -20,11 +20,19 @@ def cli():
 
 
 def fetch_for_repos(
-    repos: typing.Collection[str], fetcher_factory: fetch.Fetcher, only: typing.Optional[str] = None
+    repos: typing.Collection[str],
+    fetcher_factory: fetch.Fetcher,
+    only: typing.Optional[str] = None,
+    skip_existing: bool = False
 ) -> None:
     """Apply each fetcher to each repo.
 
     Run a fetcher on all repos before moving on to the next fetcher.
+
+    :param repos: List of repositories to fetch
+    :param fetcher_factory: Factory for fetchers to run
+    :param only: Run only this fetcher
+    :param skip_existing: Skip fetches where data already exists
     """
     if only:
         fetchers = [fetcher_factory.make(only)]
@@ -35,9 +43,9 @@ def fetch_for_repos(
     for fetcher in fetchers:
         for repo in repos:
             try:
-                fetcher(repo)
+                fetcher(repo, skip_existing)
 
-            except ResponseNotFoundError:
+            except (fetch.DataExists, ResponseNotFoundError):
                 pass
 
 
@@ -85,13 +93,17 @@ def name_set(
 @click.option('-r', '--repo', 'repos', required=False, multiple=True)  # yapf: disable
 @click.option('-f', '--file', 'repo_file', required=False, type=click.File('r'))  # yapf: disable
 @click.option('--only', required=False, type=click.Choice(fetch.GitHubFetcher.fetcher_paths.keys()))
+@click.option('--skip-existing', default=False, is_flag=True)
 def fetch_(
-    repos: typing.Iterable[str], repo_file: typing.Optional[click.File], only: typing.Optional[str] = None
+    repos: typing.Iterable[str],
+    repo_file: typing.Optional[click.File],
+    only: typing.Optional[str] = None,
+    skip_existing: bool = False
 ):
     repos = clean_repo_list(repos, repo_file)
 
     fetcher_factory = fetch.GitHubFetcher()
-    fetch_for_repos(repos, fetcher_factory, only)
+    fetch_for_repos(repos, fetcher_factory, only, skip_existing=skip_existing)
 
 
 @cli.command()
@@ -99,16 +111,18 @@ def fetch_(
 @click.option('-f', '--file', 'repo_file', required=False, type=click.File('r'))  # yapf: disable
 @click.option('--import-root', required=True, type=click.Path(dir_okay=True, file_okay=False))
 @click.option('--only', required=False, type=click.Choice(fetch.FileFetcher.fetcher_paths.keys()))
+@click.option('--skip-existing', default=False, is_flag=True)
 def import_existing(
     repos: typing.Iterable[str],
     repo_file: typing.Optional[click.File],
     import_root: PathLike,
-    only: typing.Optional[str] = None
+    only: typing.Optional[str] = None,
+    skip_existing: bool = False
 ):
     repos = clean_repo_list(repos, repo_file)
 
     fetcher_factory = fetch.FileFetcher(import_root)
-    fetch_for_repos(repos, fetcher_factory, only)
+    fetch_for_repos(repos, fetcher_factory, only, skip_existing=skip_existing)
 
 
 if __name__ == '__main__':

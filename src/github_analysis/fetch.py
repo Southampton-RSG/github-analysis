@@ -8,10 +8,14 @@ from github_analysis import connectors, db
 
 logger = logging.getLogger(__name__)
 
-FetcherFunc = typing.Callable[[str], connectors.ConnectorResponseType]
+FetcherFunc = typing.Callable[[str, typing.Optional[bool]], connectors.ConnectorResponseType]
 TransformerFunc = typing.Callable[[connectors.ConnectorResponseType], connectors.ConnectorResponseType]
 
 PathLike = typing.Union[str, pathlib.Path]
+
+
+class DataExists(ValueError):
+    pass
 
 
 def make_fetcher(
@@ -30,7 +34,7 @@ def make_fetcher(
     :param transformer: Function applied to the response before saving
     :param key_name: MonogDB field name to use for update query
     """
-    status_collection = db.collection('status')
+    status_collection = db.collection('status', indexes=[name])
 
     def update_mongo(response: connectors.ConnectorResponseType) -> None:
         """Update a record or multiple records for a response in the MongoDB collection."""
@@ -45,14 +49,27 @@ def make_fetcher(
             for r in response:
                 update_mongo(r)
 
-    def fetch(repo_name: str) -> connectors.ConnectorResponseType:
+    def fetch(repo_name: str, skip_existing: bool = False) -> connectors.ConnectorResponseType:
         """Function to fetch data for a specific repo.
 
         The content type and connectors used are set by closure.
 
         :param repo_name: Name of repository to fetch in 'username/reponame' format
+        :param skip_existing: Skip if data already exists?
         """
         owner, repo = repo_name.split('/')
+
+        if skip_existing:
+            exists = status_collection.count({
+                '_repo_name': repo_name,
+                name: {
+                    '$exists': True
+                },
+            })
+
+            if exists:
+                logger.info('Data exists for repo %s with fetcher %s', repo_name, name)
+                raise DataExists()
 
         try:
             response = connector.get(owner=owner, repo=repo)
