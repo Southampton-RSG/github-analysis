@@ -4,13 +4,15 @@ import logging
 import pathlib
 import typing
 
+import pymongo
+import pymongo.collection
 from pymongo.errors import DocumentTooLarge
 
 from github_analysis import connectors, db
 
 logger = logging.getLogger(__name__)
 
-FetcherFunc = typing.Callable[[str, typing.Optional[bool]], connectors.ConnectorResponseType]
+FetcherFunc = typing.Callable[[str, bool], connectors.ConnectorResponseType]
 TransformerFunc = typing.Callable[[connectors.ConnectorResponseType], connectors.ConnectorResponseType]
 
 PathLike = typing.Union[str, pathlib.Path]
@@ -26,7 +28,7 @@ class CouldNotStoreData(Exception):
 
 def make_fetcher(
     name: str,
-    collection,
+    collection: pymongo.collection.Collection,
     connector: connectors.BaseConnector,
     *,
     transformer: TransformerFunc = lambda x: x,
@@ -56,16 +58,13 @@ def make_fetcher(
                 raise
 
         elif isinstance(response, list):
-            hit_document_too_large = False
+            try:
+                collection.bulk_write([
+                    pymongo.ReplaceOne({key_name: item[key_name]}, item, upsert=True)
+                    for item in response
+                ], ordered=False)
 
-            for r in response:
-                try:
-                    update_mongo(r)
-
-                except DocumentTooLarge:
-                    hit_document_too_large = True
-
-            if hit_document_too_large:
+            except DocumentTooLarge:
                 raise CouldNotStoreData()
 
     def fetch(repo_name: str, skip_existing: bool = False) -> connectors.ConnectorResponseType:
