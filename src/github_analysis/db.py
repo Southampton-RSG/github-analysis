@@ -17,11 +17,12 @@ db = client['github']
 
 def collection(name: str, indexes: typing.Optional[typing.Iterable[str]] = None):
     collection = db[name]
-    collection.create_index('_repo_name')
-    collection.create_index('node_id')
 
-    if indexes is not None:
-        for index in indexes:
-            collection.create_index(index)
+    if indexes is None:
+        indexes = set()
+
+    indexes = {'_repo_name', 'node_id'}.union(indexes)
+    for index in indexes:
+        collection.create_index(index)
 
     return collection

@@ -57,12 +57,12 @@ def make_fetcher(
                 logger.error('Data did not fit within maximum record size')
                 raise
 
-        elif isinstance(response, list):
+        elif isinstance(response, list) and len(response) > 0:
             try:
-                collection.bulk_write([
-                    pymongo.ReplaceOne({key_name: item[key_name]}, item, upsert=True)
-                    for item in response
-                ], ordered=False)
+                collection.bulk_write(
+                    [pymongo.ReplaceOne({key_name: item[key_name]}, item, upsert=True) for item in response],
+                    ordered=False
+                )
 
             except DocumentTooLarge:
                 raise CouldNotStoreData()
@@ -167,7 +167,9 @@ class Fetcher(abc.ABC):
         path = self.fetcher_paths[fetch_type]
         connector = self.connector_class(self.get_path(path))
 
-        collection = db.collection(fetch_type)
+        collection = db.collection(
+            fetch_type, indexes=[self.fetcher_key_name.get(fetch_type, default='node_id')]
+        )
         fetcher_kwargs = {}
 
         try:
