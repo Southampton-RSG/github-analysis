@@ -168,7 +168,7 @@ class Fetcher(abc.ABC):
         connector = self.connector_class(self.get_path(path))
 
         collection = db.collection(
-            fetch_type, indexes=[self.fetcher_key_name.get(fetch_type, default='node_id')]
+            fetch_type, indexes=[self.fetcher_key_name.get(fetch_type, 'node_id')]
         )
         fetcher_kwargs = {}
 
