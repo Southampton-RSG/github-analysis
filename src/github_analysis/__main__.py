@@ -53,12 +53,25 @@ def label_repo_set(repo: str, set_name: str):
     """Label a repo as belonging to the set."""
     collection = db.collection('status', indexes=['sets'])
 
-    # Add set name to list of sets in status collection
+    # Add set name to array of sets in status collection
     collection.update_one({
         '_repo_name': repo,
     }, {'$addToSet': {
         'sets': set_name,
     }}, upsert=True)
+
+    # Add set name to array of sets in all other collections
+    for collection_name in {
+        *fetch.GitHubFetcher.fetcher_paths.keys(),
+        *fetch.FileFetcher.fetcher_paths.keys(),
+    }:
+        collection = db.collection(collection_name, indexes=['sets'])
+
+        collection.update_many({
+            '_repo_name': repo,
+        }, {'$addToSet': {
+            'sets': set_name,
+        }})
 
 
 def clean_repo_list(repos: typing.Iterable[str], repo_file: typing.Optional[click.File]) -> typing.List[str]:
