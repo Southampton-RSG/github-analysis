@@ -3,6 +3,11 @@
 
 A Python tool for scraping a set of repositories from GitHub to a MongoDB database.
 
+## Using the Data
+
+To use the data which has been collected by `gha`, you do not need to follow this readme and run it yourself, though you may still wish to if you want to collect a small local dataset for testing.
+Instead, please see the project wiki page on [using the data](https://github.com/Southampton-RSG/github-analysis/wiki/Using-the-Data).
+
 ## Installing and Running
 
 ### Prerequisites
