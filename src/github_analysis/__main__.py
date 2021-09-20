@@ -65,6 +65,7 @@ def label_repo_set(repo: str, set_name: str):
         *fetch.GitHubFetcher.fetcher_paths.keys(),
         *fetch.FileFetcher.fetcher_paths.keys(),
     }:
+        logger.info('Labelling collection: %s', collection_name)
         collection = db.collection(collection_name, indexes=['sets'])
 
         collection.update_many({
