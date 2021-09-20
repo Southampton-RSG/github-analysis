@@ -49,16 +49,22 @@ def fetch_for_repos(
                 pass
 
 
-def label_repo_set(repo: str, set_name: str):
+def label_repo_set(repos: typing.Iterable[str], set_name: str):
     """Label a repo as belonging to the set."""
+    logger.info('Labelling collection: status')
     collection = db.collection('status', indexes=['sets'])
+    repos = list(repos)
 
     # Add set name to array of sets in status collection
-    collection.update_one({
-        '_repo_name': repo,
-    }, {'$addToSet': {
-        'sets': set_name,
-    }}, upsert=True)
+    collection.update_one(
+        {
+            '_repo_name': {
+                '$in': repos,
+            },
+        }, {'$addToSet': {
+            'sets': set_name,
+        }}, upsert=True
+    )
 
     # Add set name to array of sets in all other collections
     for collection_name in {
@@ -69,7 +75,9 @@ def label_repo_set(repo: str, set_name: str):
         collection = db.collection(collection_name, indexes=['sets'])
 
         collection.update_many({
-            '_repo_name': repo,
+            '_repo_name': {
+                '$in': repos,
+            },
         }, {'$addToSet': {
             'sets': set_name,
         }})
@@ -95,9 +103,7 @@ def name_set(
 ):
     """Tag repos as belonging to a named set."""
     repos = clean_repo_list(repos, repo_file)
-
-    for repo in repos:
-        label_repo_set(repo, set_name)
+    label_repo_set(repos, set_name)
 
 
 @cli.command(name='fetch')
